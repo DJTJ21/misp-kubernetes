@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: mariadb:10.11
+          envFrom:
+            - configMapRef:
+                name: misp-configmap
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysql-storage
+          securityContext:
+            capabilities:
+              add:
+                - SYS_NICE
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - status
+            initialDelaySeconds: 30
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 3
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+

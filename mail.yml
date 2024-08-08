@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mail
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mail
+  template:
+    metadata:
+      labels:
+        app: mail
+    spec:
+      containers:
+        - name: mail
+          image: ixdotai/smtp
+          envFrom:
+            - configMapRef:
+                name: misp-configmap
+          ports:
+            - containerPort: 25
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mail
+spec:
+  selector:
+    app: mail
+  ports:
+    - protocol: TCP
+      port: 25
+      targetPort: 25
+

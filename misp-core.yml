@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: misp-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: misp-core
+  template:
+    metadata:
+      labels:
+        app: misp-core
+    spec:
+      containers:
+        - name: misp-core
+          image: ghcr.io/misp/misp-docker/misp-core:latest
+          envFrom:
+            - configMapRef:
+                name: misp-configmap
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          volumeMounts:
+            - mountPath: /var/www/MISP/app/Config/
+              name: configs
+            - mountPath: /var/www/MISP/app/tmp/logs/
+              name: logs
+            - mountPath: /var/www/MISP/app/files/
+              name: files
+            - mountPath: /etc/nginx/certs/
+              name: ssl
+            - mountPath: /var/www/MISP/.gnupg/
+              name: gnupg
+      volumes:
+        - name: configs
+          hostPath:
+            path: ./configs/
+        - name: logs
+          hostPath:
+            path: ./logs/
+        - name: files
+          hostPath:
+            path: ./files/
+        - name: ssl
+          hostPath:
+            path: ./ssl/
+        - name: gnupg
+          hostPath:
+            path: ./gnupg/
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: misp-core
+spec:
+  selector:
+    app: misp-core
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+
