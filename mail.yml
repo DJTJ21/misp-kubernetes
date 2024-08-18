@@ -13,15 +13,37 @@ spec:
         app: mail
     spec:
       containers:
-        - name: mail
-          image: ixdotai/smtp
-          envFrom:
-            - configMapRef:
-                name: misp-configmap
-          ports:
-            - containerPort: 25
+      - name: mail
+        image: ixdotai/smtp
+        env:
+        - name: SMARTHOST_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: mail-secrets
+              key: smarthost_address
+        - name: SMARTHOST_PORT
+          valueFrom:
+            secretKeyRef:
+              name: mail-secrets
+              key: smarthost_port
+        - name: SMARTHOST_USER
+          valueFrom:
+            secretKeyRef:
+              name: mail-secrets
+              key: smarthost_user
+        - name: SMARTHOST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mail-secrets
+              key: smarthost_password
+        - name: SMARTHOST_ALIASES
+          valueFrom:
+            secretKeyRef:
+              name: mail-secrets
+              key: smarthost_aliases
 
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -33,4 +55,3 @@ spec:
     - protocol: TCP
       port: 25
       targetPort: 25
-

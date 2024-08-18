@@ -13,41 +13,56 @@ spec:
         app: misp-core
     spec:
       containers:
-        - name: misp-core
-          image: ghcr.io/misp/misp-docker/misp-core:latest
-          envFrom:
-            - configMapRef:
-                name: misp-configmap
-          ports:
-            - containerPort: 80
-            - containerPort: 443
-          volumeMounts:
-            - mountPath: /var/www/MISP/app/Config/
-              name: configs
-            - mountPath: /var/www/MISP/app/tmp/logs/
-              name: logs
-            - mountPath: /var/www/MISP/app/files/
-              name: files
-            - mountPath: /etc/nginx/certs/
-              name: ssl
-            - mountPath: /var/www/MISP/.gnupg/
-              name: gnupg
+      - name: misp-core
+        image: ghcr.io/misp/misp-docker/misp-core:latest
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - name: config-volume
+          mountPath: /var/www/MISP/app/Config/
+        - name: logs-volume
+          mountPath: /var/www/MISP/app/tmp/logs/
+        - name: files-volume
+          mountPath: /var/www/MISP/app/files/
+        - name: ssl-volume
+          mountPath: /etc/nginx/certs/
+        - name: gnupg-volume
+          mountPath: /var/www/MISP/.gnupg/
+        env:
+        - name: BASE_URL
+          value: "https://misp.kube.staging.rhopenlabs.africa"
+        - name: MYSQL_HOST
+          value: "db"
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: MYSQL_USER
+          value: "misp"
+        - name: MYSQL_PASSWORD
+          value: "mysp-password"
+        - name: MYSQL_DATABASE
+          value: "misp"
+        - name: CRON_USER_ID
+          value: "1"
+        - name: GPG_PASSPHRASE
+          value: "passphrase"
+        - name: ENABLE_DB_SETTINGS
+          value: "true"
+        - name: DISABLE_SSL_REDIRECT
+          value: "true"
+        # Add all other necessary environment variables here
       volumes:
-        - name: configs
-          hostPath:
-            path: ./configs/
-        - name: logs
-          hostPath:
-            path: ./logs/
-        - name: files
-          hostPath:
-            path: ./files/
-        - name: ssl
-          hostPath:
-            path: ./ssl/
-        - name: gnupg
-          hostPath:
-            path: ./gnupg/
+      - name: config-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
+      - name: files-volume
+        emptyDir: {}
+      - name: ssl-volume
+        emptyDir: {}
+      - name: gnupg-volume
+        emptyDir: {}
+
 ---
 
 apiVersion: v1
@@ -60,8 +75,9 @@ spec:
   ports:
     - protocol: TCP
       port: 80
+      name: insecure
       targetPort: 80
     - protocol: TCP
       port: 443
+      name: secure
       targetPort: 443
-

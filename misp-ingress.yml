@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
+  generation: 1
+  name: misp
+  namespace: misp
+spec:
+  ingressClassName: nginx
+  tls: 
+  - hosts:
+    - misp-v2.socdemo.rhopenlabs.africa
+    secretName: misp-scrt
+  rules:
+  - host: misp-v2.socdemo.rhopenlabs.africa
+    http:
+      paths:
+      - backend:
+          service:
+            name: misp-core
+            port:
+              number: 8085
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer:
+    ingress:
+    - ip: 157.230.78.246

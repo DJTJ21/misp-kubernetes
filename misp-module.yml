@@ -1,20 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: misp-modules
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis
+      app: misp-modules
   template:
     metadata:
       labels:
-        app: redis
+        app: misp-modules
     spec:
       containers:
-      - name: redis
-        image: valkey/valkey:7.2
+      - name: misp-modules
+        image: ghcr.io/misp/misp-docker/misp-modules:latest
+        env:
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
         livenessProbe:
           exec:
             command:
@@ -22,19 +27,3 @@ spec:
             - ping
           initialDelaySeconds: 30
           periodSeconds: 2
-          timeoutSeconds: 1
-          failureThreshold: 3
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: redis
-spec:
-  selector:
-    app: redis
-  ports:
-    - protocol: TCP
-      port: 6379
-      targetPort: 6379
